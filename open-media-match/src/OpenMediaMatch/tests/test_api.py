@@ -6,7 +6,7 @@ from OpenMediaMatch import create_app
 
 @pytest.fixture()
 def app():
-    os.environ.setdefault("OMM_CONFIG", "src/OpenMediaMatch/tests/omm_config.py")
+    os.environ.setdefault("OMM_CONFIG", "tests/omm_config.py")
     app = create_app()
 
     yield app

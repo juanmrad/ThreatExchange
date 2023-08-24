@@ -20,15 +20,10 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = [
+all = [
     "mypy",
     "black",
     "pytest"
-]
-
-lint = [
-    "mypy",
-    "black",
 ]
 
 test = [ "pytest" ]

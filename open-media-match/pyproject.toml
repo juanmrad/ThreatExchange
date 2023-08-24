@@ -17,9 +17,21 @@ classifiers = [
 ]
 dependencies = [
     "flask",
-    "mypy",
-    "pytest",
 ]
+
+[project.optional-dependencies]
+dev = [
+    "mypy",
+    "black",
+    "pytest"
+]
+
+lint = [
+    "mypy",
+    "black",
+]
+
+test = [ "pytest" ]
 
 [project.urls]
 "Homepage" = "https://github.com/facebook/ThreatExchange/"

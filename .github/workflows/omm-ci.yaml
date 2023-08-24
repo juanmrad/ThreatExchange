@@ -31,7 +31,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          python3 -m pip install -e .[all]
+          python3 -m pip install -e .[lint]
       - name: Check code format
         run: |
           black --check .
@@ -46,11 +46,12 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          python3 -m pip install -e .[all]
+          python3 -m pip install -e .[lint]
       - name: Check python types
         run: |
           python -m mypy src/OpenMediaMatch
   test:
+    name: Pytet
     runs-on: ubuntu-latest
     # Service containers to run with `tests`
     services:

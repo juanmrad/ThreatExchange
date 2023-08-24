@@ -51,7 +51,7 @@ jobs:
         run: |
           python -m mypy src/OpenMediaMatch
   test:
-    name: Pytet
+    name: Pytest
     runs-on: ubuntu-latest
     # Service containers to run with `tests`
     services:
@@ -79,5 +79,4 @@ jobs:
           pip install -e ".[test]"
       - name: Test with pytest
         run: |
-          ls -l
           py.test

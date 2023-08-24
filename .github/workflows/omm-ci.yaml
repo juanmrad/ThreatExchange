@@ -79,4 +79,5 @@ jobs:
           pip install -e ".[test]"
       - name: Test with pytest
         run: |
+          ls -l
           py.test

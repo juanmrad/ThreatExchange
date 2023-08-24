@@ -70,10 +70,9 @@ jobs:
           --health-retries 5
     steps:
       - uses: actions/checkout@v2
-      runs:
-        name: Test with pytest on docker image
-        using: 'docker'
-        image: 'Dockerfile'
+      - name: Test with pytest on docker image
+        using: "docker"
+        image: "Dockerfile"
         args: |
           python -m pip install --upgrade pip
           pip install -e ".[test]"

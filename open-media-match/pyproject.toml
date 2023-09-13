@@ -21,6 +21,7 @@ dependencies = [
     "flask_migrate",
     "psycopg2",
     "threatexchange",
+    "celery"
 ]
 
 [project.optional-dependencies]

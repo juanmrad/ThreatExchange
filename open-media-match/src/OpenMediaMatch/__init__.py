@@ -29,6 +29,8 @@ def create_app():
     app.config.update(
         SQLALCHEMY_DATABASE_URI=app.config.get("DATABASE_URI"),
         SQLALCHEMY_TRACK_MODIFICATIONS=False,
+        CELERY_BROKER_URL=app.config.get("DATABASE_URI"),
+        CELERY_RESULT_BACKEND=app.config.get("DATABASE_URI"),
     )
     database.init_app(app)
     migrate.init_app(app, database)

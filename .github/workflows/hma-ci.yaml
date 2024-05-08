@@ -42,9 +42,9 @@ jobs:
 
       - name: test environment
         run: |
-        echo $VERSION
-        echo ${{ env.IMAGE_NAME }}
-        echo "ghcr.io/${{ github.repository }}/hma:${{ env.VERSION }}"
+          echo $VERSION
+          echo ${{ env.IMAGE_NAME }}
+          echo "ghcr.io/${{ github.repository }}/hma:${{ env.VERSION }}"
 
   lint-check:
     name: Lint python

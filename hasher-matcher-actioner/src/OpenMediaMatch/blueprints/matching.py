@@ -119,7 +119,7 @@ def raw_lookup():
         lookup_signal_with_distance if include_distance else lookup_signal
     )
 
-    return {"matches": lookup_signal_func(signal, signal_type_name)}
+    return lookup_signal_func(signal, signal_type_name)
 
 
 def query_index(
@@ -143,22 +143,24 @@ def query_index(
     return results
 
 
-def lookup_signal(signal: str, signal_type_name: str) -> list[int]:
+def lookup_signal(signal: str, signal_type_name: str) -> dict[str, list[int]]:
     results = query_index(signal, signal_type_name)
-    return [m.metadata for m in results]
+    return {"matches": [m.metadata for m in results]}
 
 
 def lookup_signal_with_distance(
     signal: str, signal_type_name: str
-) -> list[MatchWithDistance]:
+) -> dict[str, list[MatchWithDistance]]:
     results = query_index(signal, signal_type_name)
-    return [
-        {
-            "content_id": m.metadata,
-            "distance": m.similarity_info.pretty_str(),
-        }
-        for m in results
-    ]
+    return {
+        "matches": [
+            {
+                "content_id": m.metadata,
+                "distance": m.similarity_info.pretty_str(),
+            }
+            for m in results
+        ]
+    }
 
 
 def _validate_and_transform_signal_type(

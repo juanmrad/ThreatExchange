@@ -19,6 +19,8 @@ from threatexchange.signal_type.pdq.pdq_utils import (
     BITS_IN_PDQ,
     PDQ_CONFIDENT_MATCH_THRESHOLD,
     convert_pdq_strings_to_ndarray,
+    hex_to_binary_str,
+    binary_str_to_hex,
 )
 
 PDQIndexMatch = IndexMatchUntyped[SignalSimilarityInfoWithIntDistance, IndexT]
@@ -57,26 +59,138 @@ class PDQIndex2(SignalTypeIndex[IndexT]):
     def __len__(self) -> int:
         return len(self._idx_to_entries)
 
+    def _get_transformed_hashes(self, hash: str) -> t.List[str]:
+        """
+        Generate transformed versions of the hash to account for rotations and flips.
+
+        This includes:
+        - Original hash
+        - 90, 180, 270 degree rotations
+        - Horizontal flip
+        - Vertical flip
+        - Horizontal flip + rotations
+
+        PDQ hashes are 256-bit (64 hex character) representations where bits encode
+        spatial information in a 16x16 grid. To transform them, we need to rearrange
+        these bits according to the desired transformation.
+        """
+        # Convert hex hash to binary for easier manipulation
+        binary = hex_to_binary_str(hash)
+
+        # Create a 16x16 grid from the binary string
+        grid = []
+        for i in range(16):
+            row = []
+            for j in range(16):
+                idx = i * 16 + j
+                row.append(binary[idx])
+            grid.append(row)
+
+        # Original hash
+        transformed_hashes = [hash]
+
+        # Rotate 90 degrees clockwise
+        rotated_90 = []
+        for j in range(16):
+            row = []
+            for i in range(15, -1, -1):
+                row.append(grid[i][j])
+            rotated_90.append(row)
+
+        # Rotate 180 degrees
+        rotated_180 = []
+        for i in range(15, -1, -1):
+            row = []
+            for j in range(15, -1, -1):
+                row.append(grid[i][j])
+            rotated_180.append(row)
+
+        # Rotate 270 degrees clockwise
+        rotated_270 = []
+        for j in range(15, -1, -1):
+            row = []
+            for i in range(16):
+                row.append(grid[i][j])
+            rotated_270.append(row)
+
+        # Horizontal flip
+        flipped_h = []
+        for i in range(16):
+            row = []
+            for j in range(15, -1, -1):
+                row.append(grid[i][j])
+            flipped_h.append(row)
+
+        # Vertical flip
+        flipped_v = []
+        for i in range(15, -1, -1):
+            row = []
+            for j in range(16):
+                row.append(grid[i][j])
+            flipped_v.append(row)
+
+        # Horizontal flip + 90 degree rotation
+        flipped_h_90 = []
+        for j in range(16):
+            row = []
+            for i in range(16):
+                row.append(flipped_h[i][j])
+            flipped_h_90.append(row)
+
+        # Horizontal flip + 270 degree rotation
+        flipped_h_270 = []
+        for j in range(15, -1, -1):
+            row = []
+            for i in range(15, -1, -1):
+                row.append(flipped_h[i][j])
+            flipped_h_270.append(row)
+
+        # Convert all grids back to binary strings and then to hex
+        for grid_variant in [
+            rotated_90,
+            rotated_180,
+            rotated_270,
+            flipped_h,
+            flipped_v,
+            flipped_h_90,
+            flipped_h_270,
+        ]:
+            binary_variant = ""
+            for row in grid_variant:
+                binary_variant += "".join(row)
+            hex_variant = binary_str_to_hex(binary_variant)
+            transformed_hashes.append(hex_variant)
+
+        return transformed_hashes
+
     def query(self, hash: str) -> t.Sequence[PDQIndexMatch[IndexT]]:
         """
         Look up entries against the index, up to the threshold.
+        Consider rotated and flipped versions of the image.
         """
-        results: t.List[PDQIndexMatch[IndexT]] = []
-        matches_list: t.List[t.Tuple[int, int]] = self._index.search(
-            queries=[hash], threshold=self.threshold
-        )
+        transformed_hashes = self._get_transformed_hashes(hash)
+        all_matches = []
+        seen_ids = set()  # To avoid duplicate matches
 
-        for match, distance in matches_list:
-            entries = self._idx_to_entries[match]
-            # Create match objects for each entry
-            results.extend(
-                PDQIndexMatch(
-                    SignalSimilarityInfoWithIntDistance(distance=distance),
-                    entry,
-                )
-                for entry in entries
+        for transformed_hash in transformed_hashes:
+            matches_list = self._index.search(
+                queries=[transformed_hash], threshold=self.threshold
             )
-        return results
+
+            for match, distance in matches_list:
+                if match not in seen_ids:
+                    seen_ids.add(match)
+                    entries = self._idx_to_entries[match]
+                    # Create match objects for each entry
+                    all_matches.extend(
+                        PDQIndexMatch(
+                            SignalSimilarityInfoWithIntDistance(distance=distance),
+                            entry,
+                        )
+                        for entry in entries
+                    )
+
+        return all_matches
 
     def add(self, signal_str: str, entry: IndexT) -> None:
         self.add_all(((signal_str, entry),))

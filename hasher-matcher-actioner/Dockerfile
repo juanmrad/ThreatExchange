@@ -2,8 +2,11 @@ FROM python:3.11-bullseye
 
 WORKDIR /build
 COPY pyproject.toml ./
+COPY requirements-memory-monitoring.txt ./
 
-RUN pip install .[prod]
+RUN pip install .[prod] && \
+    pip install -r requirements-memory-monitoring.txt
+
 COPY ./src /build
 
 # Here is where you need to install your config and role settings
